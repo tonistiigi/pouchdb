@@ -6,7 +6,8 @@ var adapters = [
 if (typeof module !== undefined && module.exports) {
   this.Pouch = require('../src/pouch.js');
   this.LevelPouch = require('../src/adapters/pouch.leveldb.js');
-  this.utils = require('./test.utils.js');
+  this.utils = require('./test.utils.js')
+  this.ajax = Pouch.utils.ajax
 
   for (var k in this.utils) {
     global[k] = global[k] || this.utils[k];
@@ -39,14 +40,14 @@ adapters.map(function(adapters) {
         doc.integer = 1;
         remote.put(doc, {}, function(err, results) {
           // Compact the db.
-          Pouch.utils.ajax({
+          ajax({
             url: self.remote + '/_compact',
             type: 'POST',
             contentType: 'application/json',
             success: function(data, status, jqXHR) {
               // Wait until compaction has affected the doc.
               var checkDoc = function() {
-                Pouch.utils.ajax({
+                ajax({
                   url: self.remote + '/' + doc._id + '?revs_info=true',
                   dataType: 'json',
                   success: function(data, status, jqXHR) {
@@ -57,7 +58,7 @@ adapters.map(function(adapters) {
                       local.replicate.from(remote, function(err, results) {
                         // Check the PouchDB doc.
                         local.get(doc._id, function(err, results) {
-                          ok(results._rev == correctRev, 'correct rev stored after replication');
+                          ok(results._rev == correctRev.rev, 'correct rev stored after replication');
                           ok(results.integer == 1, 'correct content stored after replication');
                           start();
                         });
